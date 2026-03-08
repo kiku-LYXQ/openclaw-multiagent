@@ -151,10 +151,11 @@ export function App() {
   const judgementRef = useRef<string>(gameState.score_state.last_judgement);
   const audioContextRef = useRef<AudioContext | null>(null);
   const musicNodesRef = useRef<{
-    oscillator: OscillatorNode;
     gain: GainNode;
-    filter: BiquadFilterNode;
+    source: AudioNode | null;
   } | null>(null);
+  const ambientBufferRef = useRef<AudioBuffer | null>(null);
+  const ambientSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const initAudioContext = useCallback(() => {
     if (typeof window === "undefined") return null;
@@ -165,6 +166,25 @@ export function App() {
     }
     return audioContextRef.current;
   }, []);
+
+  const loadAmbientBuffer = useCallback(async () => {
+    if (ambientBufferRef.current) {
+      return ambientBufferRef.current;
+    }
+    const ctx = initAudioContext();
+    if (!ctx) return null;
+    try {
+      const response = await fetch("/ambient.mp3");
+      const array = await response.arrayBuffer();
+      const buffer = await ctx.decodeAudioData(array);
+      ambientBufferRef.current = buffer;
+      return buffer;
+    } catch (error) {
+      console.warn("无法加载 ambient 音乐", error);
+      ambientBufferRef.current = null;
+      return null;
+    }
+  }, [initAudioContext]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -186,32 +206,56 @@ export function App() {
     if (!musicEnabled) {
       const nodes = musicNodesRef.current;
       if (nodes) {
-        nodes.gain.gain.setTargetAtTime(0.0001, audioContextRef.current?.currentTime ?? 0, 0.1);
+        nodes.gain.gain.setTargetAtTime(0.0001, audioContextRef.current?.currentTime ?? 0, 0.05);
+      }
+      if (ambientSourceRef.current) {
+        const source = ambientSourceRef.current;
+        source.stop();
+        ambientSourceRef.current = null;
       }
       return;
     }
     const ctx = initAudioContext();
     if (!ctx) return;
-    const oscillator = ctx.createOscillator();
     const filter = ctx.createBiquadFilter();
     const gain = ctx.createGain();
     filter.type = "lowpass";
-    filter.frequency.value = 1000;
-    oscillator.type = "triangle";
-    oscillator.frequency.value = 220;
+    filter.frequency.value = 800;
     gain.gain.value = 0;
-    oscillator.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
-    oscillator.start();
-    gain.gain.setTargetAtTime(0.08, ctx.currentTime, 0.2);
-    musicNodesRef.current = { oscillator, gain, filter };
+    let source: AudioNode | null = null;
+    const startAmbient = async () => {
+      const buffer = await loadAmbientBuffer();
+      if (buffer) {
+        const bufferSource = ctx.createBufferSource();
+        bufferSource.buffer = buffer;
+        bufferSource.loop = true;
+        bufferSource.connect(filter);
+        bufferSource.start();
+        ambientSourceRef.current = bufferSource;
+        source = bufferSource;
+      } else {
+        const oscillator = ctx.createOscillator();
+        oscillator.type = "triangle";
+        oscillator.frequency.value = 200;
+        oscillator.connect(filter);
+        oscillator.start();
+        source = oscillator;
+      }
+      musicNodesRef.current = { gain, source };
+      gain.gain.setTargetAtTime(0.08, ctx.currentTime, 0.2);
+    };
+    startAmbient();
     return () => {
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-      oscillator.stop(ctx.currentTime + 0.6);
+      if (source instanceof OscillatorNode || source instanceof AudioBufferSourceNode) {
+        source.stop(ctx.currentTime + 0.5);
+      }
+      ambientSourceRef.current = null;
       musicNodesRef.current = null;
     };
-  }, [musicEnabled]);
+  }, [musicEnabled, loadAmbientBuffer, initAudioContext]);
 
   const playJudgementTone = useCallback((label: string) => {
     const ctx = ((): AudioContext | null => {
