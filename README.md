@@ -62,6 +62,7 @@ The HUD backend exposes the rhythm game state over HTTP and WebSocket so web das
    - `GET /history` – returns `{ "history": [...] }`. Each record is `{ "beat": <number>, "timestamp": <unix>, "state": <GameState dict> }` and contains the serialized `models.GameState` snapshot that mirrors the CLI HUD data shape.
 3. WebSocket stream:
    - Connect to `ws://<host>/ws/state` (also served at the legacy `ws://<host>/ws/game-state`) to receive every broadcasted beat update. Each message is a JSON record identical to the history entries: `{ "beat": ..., "timestamp": ..., "state": { ... } }`, where `state` includes `bpm`, `current_beat`, `score_state`, `agent_states`, `beat_timeline`, and `recent_judgements`.
+   - REST 控制也接受跨源请求（CORS 已开启），HUD 可直接从 Vite dev server 链接 `http://localhost:8000`。
 
 The service reuses the same `models.GameState`/`AgentState`/`BeatTimelineEntry` shapes as the CLI renderer, so downstream consumers can mirror the HUD layout with minimal translation.
 
