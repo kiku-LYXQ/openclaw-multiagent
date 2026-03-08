@@ -1,0 +1,8 @@
+# Ambient 音乐文件说明
+请把你想播放的纯音乐 mp3 重命名为 `ambient.mp3`，然后替换掉本文件所在目录下的文件：
+
+1. 复制你的 mp3 到 `new-app/client/public/ambient.mp3`。  
+2. 审核 `client/src/App.tsx` 中的 ambient loader，它会在点击 ♫ 时自动加载并循环播放这段音乐。  
+3. 如果想切换其他音频，只需重复以上步骤（保持文件名不变）。  
+
+保留此 placeholder 仅供说明，内容可随时删除。 
