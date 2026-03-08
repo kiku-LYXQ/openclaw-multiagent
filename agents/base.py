@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple, Union
 
+from audio.player import play_instrument_sound
+
 
 @dataclass(frozen=True)
 class RhythmPatternEvent:
@@ -121,6 +123,8 @@ class BaseMusicAgent:
             self._status = "Cooldown"
             self._cooldown_until = target_time + self.timing_tolerance
         else:
+            play_instrument_sound(self.name)
+
             status_label = "Miss"
             self._combo = 0
             self._status = "Idle"

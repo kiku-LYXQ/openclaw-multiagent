@@ -24,7 +24,7 @@ The Makefile simply wraps these commands; running them inside another directory 
 The demo relies on the following Python packages:
 
 ```bash
-pip install rich readchar
+pip install rich readchar simpleaudio
 ```
 
 `rich` is used for layout, colors, and the live display. `readchar` enables non-blocking single-key input for `H`/`P` toggles.
