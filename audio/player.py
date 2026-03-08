@@ -5,7 +5,7 @@ from typing import Dict
 
 try:
     import simpleaudio as sa
-except ImportError:
+except ImportError:  # pragma: no cover
     sa = None
 
 SAMPLE_RATE = 44100
@@ -15,6 +15,7 @@ BASE_FREQS: Dict[str, float] = {
     "violin": 660.0,
 }
 _waves: Dict[str, "sa.WaveObject"] = {}
+
 
 
 def _build_wave(freq: float) -> "sa.WaveObject":
@@ -30,12 +31,18 @@ def _build_wave(freq: float) -> "sa.WaveObject":
 
 
 def play_instrument_sound(label: str) -> None:
-    if sa is None:
-        return
     instrument = label.lower()
+    fallback = f"[Sound] {instrument.capitalize()} hit"
+    if sa is None:
+        print(fallback)
+        return
     freq = BASE_FREQS.get(instrument, 440.0)
     wave = _waves.get(instrument)
     if wave is None:
-        wave = _build_wave(freq)
+        try:
+            wave = _build_wave(freq)
+        except Exception:  # pragma: no cover
+            print(fallback)
+            return
         _waves[instrument] = wave
     wave.play()
