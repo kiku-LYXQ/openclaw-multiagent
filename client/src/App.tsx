@@ -493,17 +493,33 @@ export function App() {
         </div>
       </div>
 
-      <div className="app-grid">
-        <TimelinePanel entries={gameState.beat_timeline} currentBeat={gameState.current_beat} />
-        <AgentPanel agents={gameState.agent_states} />
-        <LogsPanel judgements={gameState.recent_judgements} />
-        <ControlPanel
-          connection={connectionLabel}
-          controlBase={CONTROL_BASE}
-          statusMessage={controlMessage}
-          onControl={sendControl}
-          controls={CONTROL_BUTTONS}
-        />
+      <div className="hud-layout">
+        <aside className="hud-side">
+          <section className="panel agent-card">
+            <h3>Agents</h3>
+            <AgentPanel agents={gameState.agent_states} />
+          </section>
+          <section className="panel logs-card">
+            <h3>Judgements</h3>
+            <LogsPanel judgements={gameState.recent_judgements} />
+          </section>
+        </aside>
+        <main className="hud-main">
+          <section className="panel timeline-card">
+            <h3>Beat Timeline</h3>
+            <TimelinePanel entries={gameState.beat_timeline} currentBeat={gameState.current_beat} />
+          </section>
+          <section className="panel control-card">
+            <h3>Controls & Stats</h3>
+            <ControlPanel
+              connection={connectionLabel}
+              controlBase={CONTROL_BASE}
+              statusMessage={controlMessage}
+              onControl={sendControl}
+              controls={CONTROL_BUTTONS}
+            />
+          </section>
+        </main>
       </div>
 
       {helpOpen && (

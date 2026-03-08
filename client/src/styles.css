@@ -389,3 +389,50 @@ body {
     align-items: flex-start;
   }
 }
+
+
+:root {
+  --panel-bg: rgba(12, 16, 33, 0.65);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-shadow: 0 20px 45px rgba(2, 6, 20, 0.4);
+}
+
+.hud-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.hud-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hud-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(22px);
+}
+
+.panel h3 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.control-card .hud-banner {
+  margin-bottom: 1rem;
+}
