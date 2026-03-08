@@ -81,6 +81,13 @@ const CONTROL_BUTTONS = [
   { label: "Pause Engine", action: "pause" },
   { label: "Reset Engine", action: "reset" },
 ];
+
+const instrumentSampleMap: Record<string, string> = {
+  Echo: "/samples/violin.mp3",
+  Northwind: "/samples/piano.mp3",
+  Argus: "/samples/cello.mp3",
+};
+const defaultSample = "/samples/pad.mp3";
 const THEME_KEY = "hud-theme";
 const WS_URL = import.meta.env.VITE_GAME_STATE_WS ?? "ws://localhost:8000/ws/state";
 const CONTROL_BASE = (import.meta.env.VITE_CONTROL_API ?? "http://localhost:8000").replace(/\/+$/, "");
@@ -185,6 +192,29 @@ export function App() {
       return null;
     }
   }, [initAudioContext]);
+  const sampleBuffersRef = useRef<Record<string, AudioBuffer | null>>({});
+  const parseJudgementLabel = useCallback((label: string) => {
+    const [agentPart, judgementPart] = label.split("•").map((part) => part.trim());
+    return { agent: agentPart || "", judgement: judgementPart || "" };
+  }, []);
+  const loadInstrumentSample = useCallback(async (ctx: AudioContext, agent: string) => {
+    const key = agent || "default";
+    if (sampleBuffersRef.current[key]) {
+      return sampleBuffersRef.current[key];
+    }
+    const url = instrumentSampleMap[agent] ?? defaultSample;
+    try {
+      const response = await fetch(url);
+      const array = await response.arrayBuffer();
+      const buffer = await ctx.decodeAudioData(array);
+      sampleBuffersRef.current[key] = buffer;
+      return buffer;
+    } catch (error) {
+      console.warn("无法加载乐器样本", url, error);
+      sampleBuffersRef.current[key] = null;
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -257,38 +287,38 @@ export function App() {
     };
   }, [musicEnabled, loadAmbientBuffer, initAudioContext]);
 
-  const playJudgementTone = useCallback((label: string) => {
-    const ctx = ((): AudioContext | null => {
-      if (typeof window === "undefined") return null;
-      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtor) return null;
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioCtor();
-      }
-      return audioContextRef.current;
-    })();
-
+  const playJudgementTone = useCallback(async (label: string) => {
+    const ctx = initAudioContext();
     if (!ctx) return;
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => undefined);
+    const { agent, judgement } = parseJudgementLabel(label);
+    const buffer = await loadInstrumentSample(ctx, agent);
+    const now = ctx.currentTime;
+    const amplitude = judgement.includes("Perfect") ? 0.3 : judgement.includes("Miss") ? 0.12 : 0.18;
+    if (buffer) {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = false;
+      const gain = ctx.createGain();
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(amplitude, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+      source.start(now);
+      source.stop(now + 1.1);
+      return;
     }
-
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
-    oscillator.type = label.includes("Miss") ? "sawtooth" : "triangle";
-    oscillator.frequency.value = label.includes("Perfect") ? 820 : label.includes("Miss") ? 180 : 520;
+    oscillator.type = judgement.includes("Miss") ? "sawtooth" : "triangle";
+    oscillator.frequency.value = judgement.includes("Perfect") ? 880 : judgement.includes("Miss") ? 200 : 520;
     gain.gain.value = 0;
     oscillator.connect(gain);
     gain.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(0.01, now);
-    gain.gain.exponentialRampToValueAtTime(0.4, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    gain.gain.setValueAtTime(amplitude * 0.8, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
     oscillator.start(now);
-    oscillator.stop(now + 0.38);
-  }, []);
-
+    oscillator.stop(now + 0.6);
+  }, [initAudioContext, loadInstrumentSample, parseJudgementLabel]);
   useEffect(() => {
     const latest = gameState.recent_judgements[0] ?? "";
     if (!latest) return;
