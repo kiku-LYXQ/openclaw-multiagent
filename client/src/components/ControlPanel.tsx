@@ -11,9 +11,10 @@ interface ControlPanelProps {
     judgement: number;
   };
   onVolumeChange: (background: number, judgement: number) => void;
+  engineStatus: "running" | "paused" | "reset";
 }
 
-export function ControlPanel({ connection, statusMessage, onControl, controlBase, controls, volumeSettings, onVolumeChange }: ControlPanelProps) {
+export function ControlPanel({ connection, statusMessage, onControl, controlBase, controls, volumeSettings, onVolumeChange, engineStatus }: ControlPanelProps) {
   return (
     <div className="panel control-panel">
       <div className="hud-banner">
@@ -23,6 +24,9 @@ export function ControlPanel({ connection, statusMessage, onControl, controlBase
         </div>
         <span className="status-pill" aria-live="polite" title={controlBase}>
           {controlBase}
+        </span>
+        <span className={`engine-pill ${engineStatus}`} aria-live="polite">
+          {engineStatus === "paused" ? "Engine paused" : engineStatus === "reset" ? "Engine reset" : "Engine running"}
         </span>
       </div>
       <div className="control-grid">

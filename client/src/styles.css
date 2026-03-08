@@ -455,3 +455,24 @@ body {
 .volume-grid input[type="range"] {
   margin-top: 0.35rem;
 }
+
+
+.engine-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.engine-pill.running {
+  background: rgba(44, 209, 149, 0.2);
+  color: #8ef2c1;
+}
+.engine-pill.paused {
+  background: rgba(255, 99, 132, 0.2);
+  color: #ff9eb2;
+}
+.engine-pill.reset {
+  background: rgba(255, 203, 107, 0.25);
+  color: #ffe5a7;
+}

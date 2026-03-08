@@ -154,6 +154,7 @@ export function App() {
   const [musicEnabled, setMusicEnabled] = useState(false);
   const [backgroundVolume, setBackgroundVolume] = useState(0.08);
   const [judgementVolume, setJudgementVolume] = useState(0.4);
+  const [engineStatus, setEngineStatus] = useState<"running" | "paused" | "reset">("running");
   const [beatPulse, setBeatPulse] = useState(0);
   const lastBeatRef = useRef<number>(gameState.current_beat);
   const beatTimerRef = useRef<number>();
@@ -424,6 +425,10 @@ export function App() {
     setJudgementVolume(judgement);
   };
 
+  const updateEngineStatus = (status: "running" | "paused" | "reset") => {
+    setEngineStatus(status);
+  };
+
   const sendControl = async (action: string) => {
     setControlMessage("发送中...");
     try {
@@ -434,6 +439,15 @@ export function App() {
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
+      }
+      const payload = await response.json();
+      const status = payload.status as "running" | "paused" | "reset" | undefined;
+      if (status) {
+        updateEngineStatus(status);
+      } else if (action === "pause") {
+        updateEngineStatus("paused");
+      } else {
+        updateEngineStatus("running");
       }
       setControlMessage(`控制指令 ${action} 已发送`);
     } catch (error) {
@@ -514,6 +528,7 @@ export function App() {
               controls={CONTROL_BUTTONS}
               volumeSettings={{ background: backgroundVolume, judgement: judgementVolume }}
               onVolumeChange={handleVolumeChange}
+              engineStatus={engineStatus}
             />
           </section>
         </main>
