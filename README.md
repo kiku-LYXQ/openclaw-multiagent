@@ -44,3 +44,5 @@ If you run in a non-interactive terminal (`tty` not available), the script print
 - The scheduler uses a deterministic sample pattern and randomised judgement timing to simulate misses and perfect hits.
 - Help and pause overlays render as stacked panels, keeping the CLI curses-friendly.
 - The CLI is self-contained inside `run.py`, so you can experiment with different patterns/agents.
+- After normal completion the script runs `stty sane` to restore the terminal state so you can continue using the shell.
+

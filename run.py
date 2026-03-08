@@ -105,7 +105,12 @@ def main() -> None:
         stop_event.set()
         engine.stop()
         keyboard_thread.join(timeout=1.0)
-        print("Run complete. Thank you for sampling the beat engine.")
+        try:
+            import os
+            os.system("stty sane")
+        except Exception:
+            pass
+        print("Run complete. Thank you for sampling the beat engine. (terminal restored)")
 
 
 if __name__ == "__main__":
