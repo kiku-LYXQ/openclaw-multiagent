@@ -152,6 +152,8 @@ export function App() {
   const [pauseOpen, setPauseOpen] = useState(false);
   const [controlMessage, setControlMessage] = useState<string>("");
   const [musicEnabled, setMusicEnabled] = useState(false);
+  const [backgroundVolume, setBackgroundVolume] = useState(0.08);
+  const [judgementVolume, setJudgementVolume] = useState(0.4);
   const [beatPulse, setBeatPulse] = useState(0);
   const lastBeatRef = useRef<number>(gameState.current_beat);
   const beatTimerRef = useRef<number>();
@@ -274,7 +276,7 @@ export function App() {
         source = oscillator;
       }
       musicNodesRef.current = { gain, source };
-      gain.gain.setTargetAtTime(0.08, ctx.currentTime, 0.2);
+      gain.gain.setTargetAtTime(backgroundVolume, ctx.currentTime, 0.2);
     };
     startAmbient();
     return () => {
@@ -293,7 +295,7 @@ export function App() {
     const { agent, judgement } = parseJudgementLabel(label);
     const buffer = await loadInstrumentSample(ctx, agent);
     const now = ctx.currentTime;
-    const amplitude = judgement.includes("Perfect") ? 0.3 : judgement.includes("Miss") ? 0.12 : 0.18;
+    const amplitude = (judgement.includes("Perfect") ? 0.3 : judgement.includes("Miss") ? 0.12 : 0.18) * judgementVolume;
     if (buffer) {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
@@ -429,6 +431,11 @@ export function App() {
     }
   }, [connection]);
 
+  const handleVolumeChange = (background: number, judgement: number) => {
+    setBackgroundVolume(background);
+    setJudgementVolume(judgement);
+  };
+
   const sendControl = async (action: string) => {
     setControlMessage("发送中...");
     try {
@@ -517,6 +524,8 @@ export function App() {
               statusMessage={controlMessage}
               onControl={sendControl}
               controls={CONTROL_BUTTONS}
+              volumeSettings={{ background: backgroundVolume, judgement: judgementVolume }}
+              onVolumeChange={handleVolumeChange}
             />
           </section>
         </main>
