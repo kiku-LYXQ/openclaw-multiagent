@@ -78,3 +78,5 @@ curl http://localhost:8000/history
 如果你想播放自定义的纯音乐（例如你自己的 mp3），把音频文件放到 `client/public/ambient.mp3`，Ambient 按钮会在点击后自动加载并循环播放它。只要后端保持运行，按下 ♫ 即可听到你提供的背景音乐；再点击一次会让音量渐弱并停止播放。
 
 - 你可以用 `client/public/ambient-placeholder.txt` 查看如何替换文件。
+
+HUD 判定音支持真实乐器样本（violin/piano/cello/pad），请参阅 `client/public/samples/README.md` 了解如何放置这些 mp3。
