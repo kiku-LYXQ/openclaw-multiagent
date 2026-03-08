@@ -4,6 +4,7 @@ import threading
 import time
 import termios
 import traceback
+import sys
 
 from readchar import readkey
 from rich.live import Live
@@ -12,8 +13,7 @@ from engine.beat_engine import BeatEngine
 from engine.scheduler import PianoAgent, Scheduler, ViolinAgent
 from ui.renderer import Renderer
 
-
-SAMPLE_PATTERN = [
+PATTERN = [
     {"beat": 1, "agent": "Piano", "action": "hit"},
     {"beat": 2, "agent": "Violin", "action": "hit"},
     {"beat": 3, "agent": "Piano", "action": "hit"},
@@ -33,7 +33,12 @@ SAMPLE_PATTERN = [
 ]
 
 
-def start_keyboard_watcher(renderer: Renderer, engine: BeatEngine, stop_event: threading.Event) -> threading.Thread:
+def start_keyboard_watcher(renderer: Renderer, engine: BeatEngine, stop_event: threading.Event, interactive: bool) -> threading.Thread:
+    if not interactive:
+        thread = threading.Thread(target=lambda: None, daemon=True)
+        thread.start()
+        return thread
+
     def runner() -> None:
         while not stop_event.is_set():
             try:
@@ -55,29 +60,43 @@ def start_keyboard_watcher(renderer: Renderer, engine: BeatEngine, stop_event: t
     return thread
 
 
+def pretty_headless_summary(state):
+    print(
+        f"[Headless] Beat {state.current_beat} | Score {state.score_state.score} | Combo {state.score_state.combo} | Last {state.score_state.last_judgement}"
+    )
+
+
 def main() -> None:
     bpm = 128.0
-    max_beats = max(entry["beat"] for entry in SAMPLE_PATTERN) + 8
+    max_beats = max(entry["beat"] for entry in PATTERN) + 8
     renderer = Renderer()
     agents = [PianoAgent(), ViolinAgent()]
-    scheduler = Scheduler(agents=agents, pattern=SAMPLE_PATTERN)
+    scheduler = Scheduler(agents=agents, pattern=PATTERN)
     engine = BeatEngine()
     engine.register_listener(scheduler.handle_beat)
     stop_event = threading.Event()
-    keyboard_thread = start_keyboard_watcher(renderer, engine, stop_event)
+    interactive = sys.stdout.isatty() and sys.stdin.isatty()
+    keyboard_thread = start_keyboard_watcher(renderer, engine, stop_event, interactive)
 
     engine.start(bpm=bpm, max_beats=max_beats)
 
     try:
-        with Live(screen=True, refresh_per_second=12) as live:
-            while engine.is_running() or renderer.help_visible:
+        if interactive:
+            with Live(screen=True, refresh_per_second=12) as live:
+                while engine.is_running() or renderer.help_visible:
+                    state = scheduler.build_state(bpm=bpm)
+                    live.update(renderer.render(state))
+                    time.sleep(0.1)
                 state = scheduler.build_state(bpm=bpm)
                 live.update(renderer.render(state))
-                time.sleep(0.1)
-            # final frame to let players see final score
+                time.sleep(0.5)
+        else:
+            while engine.is_running():
+                state = scheduler.build_state(bpm=bpm)
+                pretty_headless_summary(state)
+                time.sleep(0.5)
             state = scheduler.build_state(bpm=bpm)
-            live.update(renderer.render(state))
-            time.sleep(0.5)
+            pretty_headless_summary(state)
     except KeyboardInterrupt:
         pass
     except Exception:
