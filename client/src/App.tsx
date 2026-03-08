@@ -292,35 +292,23 @@ export function App() {
   const playJudgementTone = useCallback(async (label: string) => {
     const ctx = initAudioContext();
     if (!ctx) return;
-    const { agent, judgement } = parseJudgementLabel(label);
+    const { agent } = parseJudgementLabel(label);
     const buffer = await loadInstrumentSample(ctx, agent);
-    const now = ctx.currentTime;
-    const amplitude = (judgement.includes("Perfect") ? 0.3 : judgement.includes("Miss") ? 0.12 : 0.18) * judgementVolume;
-    if (buffer) {
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.loop = false;
-      const gain = ctx.createGain();
-      source.connect(gain);
-      gain.connect(ctx.destination);
-      gain.gain.setValueAtTime(amplitude, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
-      source.start(now);
-      source.stop(now + 1.1);
+    if (!buffer) {
       return;
     }
-    const oscillator = ctx.createOscillator();
+    const now = ctx.currentTime;
     const gain = ctx.createGain();
-    oscillator.type = judgement.includes("Miss") ? "sawtooth" : "triangle";
-    oscillator.frequency.value = judgement.includes("Perfect") ? 880 : judgement.includes("Miss") ? 200 : 520;
-    gain.gain.value = 0;
-    oscillator.connect(gain);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = false;
+    source.connect(gain);
     gain.connect(ctx.destination);
-    gain.gain.setValueAtTime(amplitude * 0.8, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
-    oscillator.start(now);
-    oscillator.stop(now + 0.6);
-  }, [initAudioContext, loadInstrumentSample, parseJudgementLabel]);
+    gain.gain.setValueAtTime(judgementVolume, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+    source.start(now);
+    source.stop(now + 1.1);
+  }, [initAudioContext, loadInstrumentSample, parseJudgementLabel, judgementVolume]);
   useEffect(() => {
     const latest = gameState.recent_judgements[0] ?? "";
     if (!latest) return;

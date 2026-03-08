@@ -79,4 +79,7 @@ curl http://localhost:8000/history
 
 - 你可以用 `client/public/ambient-placeholder.txt` 查看如何替换文件。
 
+### 音量控制
+HUD 现在提供两个滑块，一组控制背景 Ambient 音乐音量，另一组控制判定/乐器音量。滑动滑块即可实时调整音量大小，配合你加载的 mp3 样本可做细致调节。
+
 HUD 判定音支持真实乐器样本（violin/piano/cello/pad），请参阅 `client/public/samples/README.md` 了解如何放置这些 mp3。
