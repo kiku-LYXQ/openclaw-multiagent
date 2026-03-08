@@ -147,6 +147,11 @@ body {
   cursor: pointer;
 }
 
+.icon-button.active {
+  background: var(--accent);
+  color: #05060b;
+}
+
 .icon-button.secondary {
   border-color: rgba(148, 163, 184, 0.8);
 }

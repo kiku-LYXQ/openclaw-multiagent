@@ -32,6 +32,10 @@ npm run build # 运行 tsc + vite build，以验证 HUD 可以编译并打包
 
 例如：
 
+## 音乐模式
+前端额外提供一个音乐图标按钮（♫），用于唤醒并切换浏览器端的 Ambient 背景音。HUD 连接成功后点击该按钮即可播放近似 Ludovico Einaudi 《Nuvole Bianche》风格的三角波 pad（也可继续点击关闭），该按钮会保留状态并与 AudioContext 内的 oscillator/gain 自动同步。此音乐模式可与粒子/节拍的动效共同渲染出更强的仪式感。
+
+
 ```bash
 VITE_GAME_STATE_WS=ws://localhost:8000/ws/state VITE_CONTROL_API=http://localhost:8000 npm run dev
 ```

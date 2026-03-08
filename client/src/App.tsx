@@ -140,14 +140,21 @@ export function App() {
     }
     return "nebula";
   });
+
   const [helpOpen, setHelpOpen] = useState(false);
   const [pauseOpen, setPauseOpen] = useState(false);
   const [controlMessage, setControlMessage] = useState<string>("");
+  const [musicEnabled, setMusicEnabled] = useState(false);
   const [beatPulse, setBeatPulse] = useState(0);
   const lastBeatRef = useRef<number>(gameState.current_beat);
   const beatTimerRef = useRef<number>();
   const judgementRef = useRef<string>(gameState.score_state.last_judgement);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const musicNodesRef = useRef<{
+    oscillator: OscillatorNode;
+    gain: GainNode;
+    filter: BiquadFilterNode;
+  } | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -164,6 +171,37 @@ export function App() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!musicEnabled) {
+      const nodes = musicNodesRef.current;
+      if (nodes) {
+        nodes.gain.gain.setTargetAtTime(0.0001, audioContextRef.current?.currentTime ?? 0, 0.1);
+      }
+      return;
+    }
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+    const oscillator = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    filter.type = "lowpass";
+    filter.frequency.value = 1000;
+    oscillator.type = "triangle";
+    oscillator.frequency.value = 220;
+    gain.gain.value = 0;
+    oscillator.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start();
+    gain.gain.setTargetAtTime(0.08, ctx.currentTime, 0.2);
+    musicNodesRef.current = { oscillator, gain, filter };
+    return () => {
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+      oscillator.stop(ctx.currentTime + 0.6);
+      musicNodesRef.current = null;
+    };
+  }, [musicEnabled]);
 
   const playJudgementTone = useCallback((label: string) => {
     const ctx = ((): AudioContext | null => {
@@ -348,6 +386,18 @@ export function App() {
         </div>
         <div className="hud-header-actions">
           <ThemeToggle value={theme} onChange={(value) => setTheme(value)} />
+          <button
+            className={`icon-button${musicEnabled ? " active" : ""}`}
+            onClick={() => {
+              if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+                audioContextRef.current.resume().catch(() => undefined);
+              }
+              setMusicEnabled((prev) => !prev);
+            }}
+            aria-label="Toggle ambient music"
+          >
+            ♫
+          </button>
           <button className="icon-button" onClick={() => setHelpOpen(true)} aria-label="Help">
             ?
           </button>
