@@ -156,6 +156,16 @@ export function App() {
     filter: BiquadFilterNode;
   } | null>(null);
 
+  const initAudioContext = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtor) return null;
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioCtor();
+    }
+    return audioContextRef.current;
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     if (typeof window !== "undefined") {
@@ -180,7 +190,7 @@ export function App() {
       }
       return;
     }
-    const ctx = audioContextRef.current;
+    const ctx = initAudioContext();
     if (!ctx) return;
     const oscillator = ctx.createOscillator();
     const filter = ctx.createBiquadFilter();
@@ -389,8 +399,9 @@ export function App() {
           <button
             className={`icon-button${musicEnabled ? " active" : ""}`}
             onClick={() => {
-              if (audioContextRef.current && audioContextRef.current.state === "suspended") {
-                audioContextRef.current.resume().catch(() => undefined);
+              const ctx = initAudioContext();
+              if (ctx && ctx.state === "suspended") {
+                ctx.resume().catch(() => undefined);
               }
               setMusicEnabled((prev) => !prev);
             }}
