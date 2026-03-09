@@ -476,3 +476,16 @@ body {
   background: rgba(255, 203, 107, 0.25);
   color: #ffe5a7;
 }
+
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-status {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}

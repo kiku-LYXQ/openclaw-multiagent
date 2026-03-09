@@ -5,7 +5,7 @@ import { LogsPanel } from "./components/LogsPanel";
 import { ParticleCanvas } from "./components/ParticleCanvas";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { TimelinePanel } from "./components/TimelinePanel";
-import { GameState } from "./types/gameState";
+import { GameState, BeatTimelineEntry } from "./types/gameState";
 import "./styles.css";
 
 const DEFAULT_GAME_STATE: GameState = {
@@ -155,6 +155,7 @@ export function App() {
   const [backgroundVolume, setBackgroundVolume] = useState(0.08);
   const [judgementVolume, setJudgementVolume] = useState(0.4);
   const [engineStatus, setEngineStatus] = useState<"running" | "paused" | "reset">("running");
+  const [pausedTimeline, setPausedTimeline] = useState<BeatTimelineEntry[]>([]);
   const [beatPulse, setBeatPulse] = useState(0);
   const lastBeatRef = useRef<number>(gameState.current_beat);
   const beatTimerRef = useRef<number>();
@@ -429,6 +430,14 @@ export function App() {
     setEngineStatus(status);
   };
 
+  useEffect(() => {
+    if (engineStatus === "paused") {
+      setPausedTimeline(gameState.beat_timeline);
+    } else {
+      setPausedTimeline([]);
+    }
+  }, [engineStatus, gameState.beat_timeline]);
+
   const sendControl = async (action: string) => {
     setControlMessage("发送中...");
     try {
@@ -457,6 +466,10 @@ export function App() {
       setControlMessage("");
     }, 2600);
   };
+
+  const timelineEntries = engineStatus === "paused" && pausedTimeline.length ? pausedTimeline : gameState.beat_timeline;
+  const timelineLabel = engineStatus === "paused" ? "Recent beats (paused)" : "Upcoming beats";
+  const timelineStatus = engineStatus === "paused" ? `Timeline frozen at beat ${gameState.current_beat}` : `Rolling ${gameState.beat_timeline.length}`;
 
   const particleIntensity = Math.min(1, beatPulse + Math.max(0, (gameState.bpm - 90) / 200));
 
@@ -515,8 +528,11 @@ export function App() {
         </aside>
         <main className="hud-main">
           <section className="panel timeline-card">
-            <h3>Beat Timeline</h3>
-            <TimelinePanel entries={gameState.beat_timeline} currentBeat={gameState.current_beat} />
+            <div className="timeline-header">
+              <h3>{timelineLabel}</h3>
+              <span className="timeline-status">{timelineStatus}</span>
+            </div>
+            <TimelinePanel entries={timelineEntries} currentBeat={gameState.current_beat} headerLabel={timelineLabel} statusText={timelineStatus} />
           </section>
           <section className="panel control-card">
             <h3>Controls & Stats</h3>
