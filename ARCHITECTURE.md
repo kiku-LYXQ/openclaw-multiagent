@@ -46,3 +46,7 @@
 - README 继续强调 `VITE_*` 环境变量和 WebSocket alias。 
 - 若需部署，可添加 `make run-server`、Dockerfile 或部署说明。 
 - 需要进一步演示或监控集成可单独拆出任务。
+
+## Engine status indicator
+- Control panel now shows the real-time engine status pill (running/paused/reset) tied to the backend `status` field.
+- This indicator, along with the volume sliders and logs, provides a quick way to verify that pause/resume controls have actually taken effect.

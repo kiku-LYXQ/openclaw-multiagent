@@ -83,3 +83,6 @@ curl http://localhost:8000/history
 HUD 现在提供两个滑块，一组控制背景 Ambient 音乐音量，另一组控制判定/乐器音量。滑动滑块即可实时调整音量大小，配合你加载的 mp3 样本可做细致调节。
 
 HUD 判定音支持真实乐器样本（violin/piano/cello/pad），请参阅 `client/public/samples/README.md` 了解如何放置这些 mp3。
+
+### Engine 状态提示
+控制面板右上新增了一个状态 pill（绿色/红色），会同步展示 Engine 运行状态（running/paused/reset）。当你点击 Pause/Resume/Reset 时会立即更新这个状态并记录在 Logs/History 中，方便确认后台节奏流是否真的被暂停。
